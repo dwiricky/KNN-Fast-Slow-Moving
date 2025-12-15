@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score
+import matplotlib.pyplot as plt
 
 # Load dataset
 def load_data():
@@ -33,20 +34,26 @@ def evaluate_model(model, X_test, y_test):
 
 # Streamlit Interface
 def main():
+    st.set_page_config(page_title="Klasifikasi Barang Fast/Slow Moving", layout="wide")
+    
     st.title("Klasifikasi Barang Fast/Slow Moving menggunakan KNN")
-    st.write("""
-    Aplikasi ini menggunakan algoritma K-Nearest Neighbors (KNN) untuk mengklasifikasikan barang
-    sebagai Fast, Medium, atau Slow Moving berdasarkan data penjualan dan karakteristik produk.
+    
+    st.markdown("""
+    **Aplikasi Klasifikasi Barang Fast/Slow Moving**  
+    Aplikasi ini menggunakan algoritma **K-Nearest Neighbors (KNN)** untuk mengklasifikasikan barang
+    sebagai *Fast*, *Medium*, atau *Slow Moving* berdasarkan data penjualan dan karakteristik produk.
+    
+    Pilih parameter dan lihat hasil klasifikasi berdasarkan data yang tersedia.
     """)
 
     # Load data
     df = load_data()
 
-    # Preprocess data
+    # Preprocessing data
     X, y = preprocess_data(df)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    # Normalize data
+    # Normalisasi data
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
@@ -58,9 +65,11 @@ def main():
     # Evaluate the model
     accuracy, predictions = evaluate_model(model, X_test_scaled, y_test)
 
-    # Show evaluation results
-    st.write(f"Akurasi Model: {accuracy * 100:.2f}%")
-    st.write("Prediksi untuk data uji:")
+    # Display the results
+    st.subheader("Hasil Evaluasi Model")
+    st.write(f"Akurasi Model: **{accuracy * 100:.2f}%**")
+
+    st.subheader("Prediksi untuk Data Uji:")
     result_df = pd.DataFrame({
         'id_barang': df['id_barang'][X_test.index],
         'Nama Barang': df['nama_barang'][X_test.index],
@@ -68,8 +77,21 @@ def main():
     })
     st.write(result_df)
 
+    # Visualisasi
+    st.subheader("Visualisasi Performa Penjualan")
+    fig, ax = plt.subplots(figsize=(10, 6))
+    df['label'].value_counts().plot(kind='bar', ax=ax, color=['green', 'yellow', 'red'])
+    ax.set_title("Distribusi Klasifikasi Barang (Fast, Medium, Slow)")
+    ax.set_xlabel("Klasifikasi")
+    ax.set_ylabel("Jumlah Barang")
+    st.pyplot(fig)
+
     # Input untuk prediksi baru
-    st.header("Prediksi Klasifikasi Baru")
+    st.header("Prediksi Klasifikasi Barang Baru")
+    st.markdown("""
+    **Masukkan data untuk memprediksi kategori (Fast, Medium, atau Slow) untuk produk baru**.
+    """)
+    
     jumlah_terjual = st.number_input("Jumlah Terjual Per Minggu", min_value=0)
     frekuensi_penjualan = st.number_input("Frekuensi Penjualan Per Minggu", min_value=0)
     umur_stok = st.number_input("Umur Stok (hari)", min_value=0)
@@ -80,7 +102,7 @@ def main():
         input_data = [[jumlah_terjual, frekuensi_penjualan, umur_stok, margin, waktu_pengiriman]]
         input_data_scaled = scaler.transform(input_data)
         prediksi = model.predict(input_data_scaled)
-        st.write(f"Prediksi Klasifikasi Barang: {prediksi[0]}")
+        st.write(f"**Prediksi Klasifikasi Barang**: {prediksi[0]}")
 
 if __name__ == "__main__":
     main()
